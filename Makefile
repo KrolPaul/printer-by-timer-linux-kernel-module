@@ -4,6 +4,7 @@ obj-m += $(MODULE_NAME).o
 PWD := $(CURDIR)
  
 all:
+	#make -C user-space
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 clean:

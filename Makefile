@@ -4,11 +4,12 @@ obj-m += $(MODULE_NAME).o
 PWD := $(CURDIR)
  
 all:
-	#make -C user-space
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+	cd user-space && make
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	cd user-space && make clean
 	
 load:
 	sudo insmod $(MODULE_NAME).ko

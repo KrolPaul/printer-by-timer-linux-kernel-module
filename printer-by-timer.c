@@ -23,7 +23,7 @@ MODULE_DESCRIPTION("Module prints <Hello from kernel module> to file every N sec
 /* Module params */
 static int print_every_n_sec = 10; 
 module_param(print_every_n_sec, int, 0);
-static char * file_name = "/printer-module-temp";
+static char * file_name = MODULE_DIR "printer-module-temp";
 module_param(file_name, charp, 0);
 
 
@@ -34,7 +34,6 @@ static void print(struct work_struct * work)
 {
 	static char* print_text = "Hello from kernel module";
 	static char* print_prog_path = MODULE_DIR "helper/printer";
-	pr_info("%s", print_prog_path);
 	
 	char *argv[] = {print_prog_path, file_name, print_text, NULL};
 	static char *env[] = {NULL};
@@ -58,7 +57,6 @@ static void timer_start(struct timer_list * timer)
 
 static void timer_isr_top(struct timer_list * timer)
 {
-	pr_info("Interrupt works!");
 	schedule_work(&timer_isr_bottom);
 	timer_start(timer);
 }

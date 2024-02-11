@@ -1,4 +1,4 @@
-MODULE_NAME=simple-printer
+MODULE_NAME=printer-by-timer
 obj-m += $(MODULE_NAME).o
 
 PWD = $(CURDIR)

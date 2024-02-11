@@ -7,9 +7,9 @@
  * to chosen file by timer.
  */
 
-#include <linux/init.h> /* необходим для макросов*/
-#include <linux/kernel.h> /* необходим для pr_info() */
-#include <linux/module.h> /* необходим для всех модулей */
+#include <linux/init.h>
+#include <linux/kernel.h> 
+#include <linux/module.h> 
 #include <linux/timer.h>
 #include <linux/jiffies.h>
 
@@ -21,27 +21,27 @@ MODULE_DESCRIPTION("Module prints <Hello from kernel module> to file every N sec
 
 
 /* Module params */
-static int print_every_n_sec = 5; 
+static int print_every_n_sec = 10; 
 module_param(print_every_n_sec, int, 0);
-static char * file_name = "/home/paul/module/user-space/heythere";
+static char * file_name = "/printer-module-temp";
 module_param(file_name, charp, 0);
 
 
 struct work_struct timer_isr_bottom;
 static struct timer_list printer_timer;
 
-
 static void print(struct work_struct * work)
 {
-	static char* print_prog = "/home/paul/module/user-space/printer";
 	static char* print_text = "Hello from kernel module";
+	static char* print_prog_path = MODULE_DIR "helper/printer";
+	pr_info("%s", print_prog_path);
 	
-	char *argv[] = {print_prog, file_name, print_text, NULL};
+	char *argv[] = {print_prog_path, file_name, print_text, NULL};
 	static char *env[] = {NULL};
 	
-	int err = call_usermodehelper(print_prog, argv, env, UMH_WAIT_PROC);
+	int err = call_usermodehelper(argv[0], argv, env, UMH_WAIT_PROC);
 	if (err)
-		perror("Error while calling user space printer", err);
+		perror("Error while calling helper (printer)", err);
 }
 
 DECLARE_WORK(timer_isr_bottom, print);
@@ -66,20 +66,25 @@ static void timer_isr_top(struct timer_list * timer)
 
 static int __init startup(void)
 {
-    pr_info("Module startup!\n");
-	//pr_info("File name: %s\n", file_name);
-	//pr_info("Write every N seconds: %d\n", print_every_n_sec);
+	if (print_every_n_sec < 1){
+		pr_err("Module loading failed! Print interval must be > 0");
+		return -1;
+	}
 	
 	timer_setup(&printer_timer, timer_isr_top, 0);
 	timer_start(&printer_timer);
-
+	
+	pr_info("Module loaded!");
+	pr_info("Print to file: %s\n", file_name);
+	pr_info("Every N seconds: %d\n", print_every_n_sec);
     return 0;
 }
  
 static void __exit cleanup(void)
 {
-	pr_info("Module cleanup!");
 	del_timer(&printer_timer);
+	flush_scheduled_work();
+	pr_info("Module unloaded!");
 }
 
 module_init(startup)
